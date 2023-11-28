@@ -1,0 +1,2 @@
+* text=auto eol=lf
+src/scribe/_version.py export-subst
