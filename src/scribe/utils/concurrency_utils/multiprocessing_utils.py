@@ -1,5 +1,13 @@
 from multiprocessing import Event
 
+from scribe.utils.tts_utils.synthesis import (
+    text_to_speech,
+    tts_with_vc,
+    voice_conversion,
+)
+
+# for running tts in separate processes
+
 
 class BackgroundProcessManager:
     def __init__(self, max_processes=1):
@@ -22,27 +30,44 @@ class BackgroundProcessManager:
     def get_all_processes(self):
         return self.processes
 
-    def stop_process(self, process_id):
+    def stop_process(self, process_id, remove=True):
         process = self.get_process(process_id)
         if process:
             process["stop_event"].set()
             process["process"].terminate()
-            self.remove_process(process_id)
+            if remove:
+                self.remove_process(process_id)
             return True
         return False
 
-    def stop_all_processes(self):
+    def stop_all_processes(self, remove=True):
         for process_id in self.processes:
-            self.stop_process(process_id)
+            self.stop_process(process_id, remove=remove)
 
-    def join_process(self, process_id):
+    def join_process(self, process_id, remove=True):
         process = self.get_process(process_id)
         if process:
             process["process"].join()
-            self.remove_process(process_id)
+            if remove:
+                self.remove_process(process_id)
             return True
         return False
 
-    def join_all_processes(self):
+    def join_all_processes(self, remove=True):
         for process_id in self.processes:
-            self.join_process(process_id)
+            self.join_process(process_id, remove=remove)
+
+
+def _text_to_speech(text, model, language, speaker, output_path, speaker_wav, stop_event):
+    text_to_speech(text, model, language=language, speaker=speaker, output_path=output_path, speaker_wav=speaker_wav)
+    stop_event.set()
+
+
+def _tts_with_vc(text, model, language, speaker, output_path, speaker_wav, stop_event):
+    tts_with_vc(text, model, language=language, speaker=speaker, output_path=output_path, speaker_wav=speaker_wav)
+    stop_event.set()
+
+
+def _voice_conversion(source_wav, target_wav, model, output_path, stop_event):
+    voice_conversion(source_wav, target_wav, model, output_path)
+    stop_event.set()

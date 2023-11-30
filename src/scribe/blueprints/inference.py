@@ -21,19 +21,6 @@ inference_blueprint = Blueprint("tasks", __name__)
 
 
 # wrappers for threading/multiprocessing
-def _text_to_speech(text, model, language, speaker, output_path, speaker_wav, stop_event):
-    text_to_speech(text, model, language=language, speaker=speaker, output_path=output_path, speaker_wav=speaker_wav)
-    stop_event.set()
-
-
-def _tts_with_vc(text, model, language, speaker, output_path, speaker_wav, stop_event):
-    tts_with_vc(text, model, language=language, speaker=speaker, output_path=output_path, speaker_wav=speaker_wav)
-    stop_event.set()
-
-
-def _voice_conversion(source_wav, target_wav, model, output_path, stop_event):
-    voice_conversion(source_wav, target_wav, model, output_path)
-    stop_event.set()
 
 
 @inference_blueprint.route("/upload_model", methods=["POST"])
