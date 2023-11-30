@@ -7,9 +7,11 @@ from flask import Flask
 
 from scribe.blueprints import blueprints
 from scribe.utils.args_utils import parse_flask_server_args
+
+# from scribe.utils.concurrency_utils.multiprocessing_utils import BackgroundProcessManager
+from scribe.utils.concurrency_utils.threading_utils import ThreadManager
 from scribe.utils.file_utils import initialise_filesystem
 from scribe.utils.logging_utils import setup_logger
-from scribe.utils.multiprocessing_utils import BackgroundProcessManager
 from scribe.utils.tts_utils.synthesis import InMemoryModels
 
 logger = logging.getLogger(__name__)
@@ -38,8 +40,13 @@ if __name__ == "__main__":
     filesystem_root = os.path.abspath(args.filesystem_root)
     initialise_filesystem(filesystem_root)
     app.config["FILESYSTEM_ROOT"] = filesystem_root
-    app.config["PROCESS_MANAGER"] = (
-        None if (args.max_processes == None or args.max_processes == 0) else BackgroundProcessManager(max_processes=1)
-    )
+    # app.config["PROCESS_MANAGER"] = (
+    #     None if (args.max_processes == None or args.max_processes == 0) else BackgroundProcessManager(max_processes=1)
+    # )
+    app.config[
+        "THREAD_MANAGER"
+    ] = (
+        ThreadManager()
+    )  # If both PROCESS_MANAGER and THREAD_MANAGER exist, I can just give a ThreadManager to a ProcessManager, as long as I setup my processes to take queues
     app.config["MODELS"] = InMemoryModels()
     main(args.host, args.port, False if args.log_level == logging.DEBUG else True)
