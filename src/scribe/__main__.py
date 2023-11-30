@@ -43,10 +43,7 @@ if __name__ == "__main__":
     # app.config["PROCESS_MANAGER"] = (
     #     None if (args.max_processes == None or args.max_processes == 0) else BackgroundProcessManager(max_processes=1)
     # )
-    app.config[
-        "THREAD_MANAGER"
-    ] = (
-        ThreadManager()
-    )  # If both PROCESS_MANAGER and THREAD_MANAGER exist, I can just give a ThreadManager to a ProcessManager, as long as I setup my processes to take queues
+    # If both PROCESS_MANAGER and THREAD_MANAGER exist, I can just give a ThreadManager to a ProcessManager, as long as I setup my processes to take queues
+    app.config["THREAD_MANAGER"] = ThreadManager()
     app.config["MODELS"] = InMemoryModels()
     main(args.host, args.port, False if args.log_level == logging.DEBUG else True)
