@@ -44,6 +44,7 @@ class FlaskServerArgs:
     log_level: int = os.getenv("LOG_LEVEL", logging.INFO)
     console_log: bool = os.getenv("CONSOLE_LOG", True)
     filesystem_root = os.getenv("FILESYSTEM_ROOT", "filesystem")
+    max_processes: int = os.getenv("MAX_PROCESSES", None)
 
 
 def parse_flask_server_args() -> FlaskServerArgs:
@@ -71,6 +72,14 @@ def parse_flask_server_args() -> FlaskServerArgs:
         type=str,
         dest="filesystem_root",
         help="The root of the filesystem to use",
+    )
+    arg_parser.add_argument(
+        "-mp",
+        "--max-processes",
+        default=None,
+        type=int,
+        dest="max_processes",
+        help="The maximum number of processes to use",
     )
     add_boolean_arg(arg_parser, "console-log", "Log to console", default=True)
     return FlaskServerArgs(**OrderedDict(vars(arg_parser.parse_args())))

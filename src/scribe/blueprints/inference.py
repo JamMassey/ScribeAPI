@@ -1,16 +1,39 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing
 import os
+import uuid
 
 from flask import Blueprint, abort, current_app, jsonify, request, send_file
 
 from scribe.utils.file_utils import temp_zip
+from scribe.utils.tts_utils.synthesis import (
+    text_to_speech,
+    tts_with_vc,
+    voice_conversion,
+)
 
 logger = logging.getLogger(__name__)
 
 
 inference_blueprint = Blueprint("tasks", __name__)
+
+
+# wrappers for threading/multiprocessing
+def _text_to_speech(text, model, language, speaker, output_path, speaker_wav, stop_event):
+    text_to_speech(text, model, language=language, speaker=speaker, output_path=output_path, speaker_wav=speaker_wav)
+    stop_event.set()
+
+
+def _tts_with_vc(text, model, language, speaker, output_path, speaker_wav, stop_event):
+    tts_with_vc(text, model, language=language, speaker=speaker, output_path=output_path, speaker_wav=speaker_wav)
+    stop_event.set()
+
+
+def _voice_conversion(source_wav, target_wav, model, output_path, stop_event):
+    voice_conversion(source_wav, target_wav, model, output_path)
+    stop_event.set()
 
 
 @inference_blueprint.route("/upload_model", methods=["POST"])
@@ -102,3 +125,42 @@ def download_model():
     except Exception as e:
         logger.warning(f"Failed to delete temp zip file: {e}")
     return response
+
+
+@inference_blueprint.route("/synthesize", methods=["POST"])
+def synthesize():
+    """Synthesize speech from text."""
+    if "text" not in request.form:
+        abort(400, "No text provided.")
+    if "model" not in request.form:
+        abort(400, "No model provided.")
+
+    text = request.form["text"]
+    model = request.form["model"]
+    language = request.form.get("language", "en")
+    speaker = request.form.get("speaker", None)
+    output_path = request.form.get("output_path", None)
+    speaker_wav = request.form.get("speaker_wav", None)
+    str(uuid.uuid4())
+
+
+def synthesize_worker():
+    return
+
+
+@inference_blueprint.route("/voice_conversion", methods=["POST"])
+def voice_conversion():
+    """Convert voice from source to target."""
+    if "source_wav" not in request.form:
+        abort(400, "No source wav provided.")
+    if "target_wav" not in request.form:
+        abort(400, "No target wav provided.")
+    if "model" not in request.form:
+        abort(400, "No model provided.")
+
+    source_wav = request.form["source_wav"]
+    target_wav = request.form["target_wav"]
+    model = request.form["model"]
+    output_path = request.form.get("output_path", None)
+    wav = voice_conversion(source_wav, target_wav, model, output_path)
+    return send_file(wav, mimetype="audio/wav")
